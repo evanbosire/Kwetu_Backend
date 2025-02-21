@@ -20,8 +20,9 @@ mongoose
 // Enable CORS for specific origin (your frontend)
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow requests from this origin
-    credentials: true, // Allow cookies and credentials
+    origin:
+      "https://kwetu-frontend-8n0s2s40o-evans-bosires-projects.vercel.app",
+    credentials: true,
   })
 );
 
