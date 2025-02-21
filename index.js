@@ -20,8 +20,7 @@ mongoose
 // Enable CORS for specific origin (your frontend)
 app.use(
   cors({
-    origin:
-      "https://kwetu-frontend-1y3amr705-evans-bosires-projects.vercel.app/",
+    origin: "https://kwetu-frontend-git-main-evans-bosires-projects.vercel.app",
     credentials: true,
   })
 );
