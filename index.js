@@ -21,7 +21,7 @@ mongoose
 app.use(
   cors({
     origin:
-      "https://kwetu-frontend-8n0s2s40o-evans-bosires-projects.vercel.app",
+      "https://kwetu-frontend-1y3amr705-evans-bosires-projects.vercel.app/",
     credentials: true,
   })
 );
