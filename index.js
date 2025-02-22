@@ -18,12 +18,7 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Enable CORS for specific origin (your frontend)
-app.use(
-  cors({
-    origin: "https://kwetu-frontend-git-main-evans-bosires-projects.vercel.app",
-    credentials: true,
-  })
-);
+app.use(cors());
 
 app.use(bodyParser.json());
 
