@@ -13,9 +13,13 @@ const port = process.env.PORT || 5000; // Use the environment PORT variable
 // MongoDB connection using environment variable
 const uri = process.env.MONGO_URL;
 mongoose
-  .connect(uri) // Consider updating options for Mongoose
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
+
 
 // Enable CORS for specific origin (your frontend)
 app.use(cors());
