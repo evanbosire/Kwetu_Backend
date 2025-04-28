@@ -4,6 +4,7 @@ const Customer = require("../models/Customer");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+require('dotenv').config();
 
 // Fetch customers by status
 router.get("/:status", async (req, res) => {
@@ -275,40 +276,29 @@ const generateSecretKey = () => {
 };
 const secretKey = generateSecretKey();
 
-// POST /api/customer/login
+// // POST /api/customer/login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const customer = await Customer.findOne({ email });
-
-    // Check if the customer exists
-    if (!customer) {
-      return res.status(400).json({ message: "Invalid credentials." });
+    if (!customer || customer.password !== password) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Check if the password matches (without bcrypt, just plain text comparison)
-    if (customer.password !== password) {
-      return res.status(400).json({ message: "Invalid credentials." });
-    }
-
-    // Check if the customer's status is active
     if (customer.status !== "active") {
-      return res.status(403).json({
-        message: "Account not approved. Please contact Administrator support.",
-      });
+      return res.status(403).json({ message: "Account not approved" });
     }
 
-    // Generate a token
-    const token = jwt.sign({ customerId: customer._id }, secretKey);
+    const token = jwt.sign(
+      { customerId: customer._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
 
-    // Return success with token
     res.status(200).json({ token, message: "Login successful" });
   } catch (error) {
-    console.error("Error during login:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error, please try again later." });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -345,25 +335,6 @@ router.post("/addresses", async (req, res) => {
       .json({ message: "Error adding address", error: error.message });
   }
 });
-
-// // Endpoint to get all the addresses of the user
-
-// router.get("/addresses/:userId", async (req, res) => {
-//   try {
-//     const userId = req.params.userId;
-
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(404).json({ message: "User not Found!" });
-//     }
-
-//     const addresses = user.addresses;
-//     res.status(200).json(addresses);
-//   } catch (error) {
-//     res.status(500).json({ message: "Error retrieving the addresses" });
-//   }
-// });
-
 // Endpoint to get all the addresses of the customer
 router.get("/addresses/:customerId", async (req, res) => {
   try {
