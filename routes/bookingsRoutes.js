@@ -10,8 +10,7 @@ const Customer = require('../models/Customer');
 
 // Customer creates booking
 router.post('/', authenticateCustomer, async (req, res) => {
-  const { serviceId, hours, paymentCode } = req.body;
-
+  const { serviceId, hours, paymentCode, serviceTitle } = req.body;
   try {
     // Payment validation
     const validCode = /^(?=(.*[A-Z]){8})(?=(.*\d){2})[A-Z0-9]+$/;
@@ -30,6 +29,7 @@ router.post('/', authenticateCustomer, async (req, res) => {
     // Create booking
     const booking = new Booking({
       service: serviceId,
+      serviceTitle: serviceTitle || service.title,
       customerId: customer._id,
       customerName: customer.customerName, 
       customerEmail: customer.email,      
@@ -69,82 +69,6 @@ router.patch('/:id/approve-payment', async (req, res) => {
 });
 
 // Customer to download the gym coaching receipt
-// router.get('/:id/generate-receipt', async (req, res) => {
-//   try {
-//     const booking = await Booking.findById(req.params.id).populate("service");
-
-//     if (!booking || !booking.paymentApproved) {
-//       return res.status(400).json({ message: "Booking not approved yet" });
-//     }
-
-//     // Ensure the receipts directory exists
-//     const receiptsDir = path.join(__dirname, '../public/receipts');
-//     if (!fs.existsSync(receiptsDir)) {
-//       fs.mkdirSync(receiptsDir, { recursive: true });
-//     }
-
-//     // Path to save the PDF receipt
-//     const receiptPath = path.join(receiptsDir, `${booking._id}.pdf`);
-//     const writeStream = fs.createWriteStream(receiptPath);
-
-//     // Create and write the PDF content
-//     const doc = new PDFDocument({
-//       size: 'A4',
-//       margin: 50
-//     });
-
-//     doc.pipe(writeStream);
-
-//     // Simulate background color
-//     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#f2f2f2');
-
-//     // Reset fill color for text
-//     doc.fillColor('black');
-
-//     // Kwetu Nutrition header
-//     doc.fontSize(22).text('Kwetu Nutrition', { align: 'center' });
-//     doc.moveDown();
-
-//     // Booking receipt content
-//     doc.fontSize(18).text('Gym Coaching Booking Receipt', { align: 'center' });
-//     doc.moveDown();
-//     doc.fontSize(12).text(`Booking ID: ${booking._id}`);
-//     doc.text(`Service: ${booking.service.title}`);
-//     doc.text(`Hours: ${booking.hours}`);
-//     doc.text(`Total Price: ${booking.totalPrice}`);
-//     doc.text(`Payment Code: ${booking.paymentCode}`);
-//     doc.text(`Date: ${booking.createdAt.toDateString()}`);
-//     doc.moveDown();
-
-//     // Thank you message
-//     doc.fontSize(10).text('Thank you for choosing Kwetu Nutrition!');
-//     doc.text('We appreciate your trust in us and look forward to helping you achieve your goals.');
-//     doc.text('If you have any questions or need further assistance, feel free to contact us.');
-//     doc.text('We hope to see you again soon!');
-//     doc.moveDown();
-
-//     doc.end();
-
-//     // After the file is written
-//     writeStream.on('finish', async () => {
-//       booking.receiptUrl = `/receipts/${booking._id}.pdf`;
-//       await booking.save();
-//       res.status(200).json({
-//         message: 'Receipt generated successfully',
-//         receiptUrl: booking.receiptUrl
-//       });
-//     });
-
-//     writeStream.on('error', (err) => {
-//       console.error("Write stream error:", err);
-//       res.status(500).json({ message: "Error saving receipt file" });
-//     });
-
-//   } catch (err) {
-//     console.error("Error generating receipt:", err);
-//     res.status(500).json({ message: 'Error generating receipt' });
-//   }
-// });
 router.get('/:id/generate-receipt', async (req, res) => {
   try {
     // const booking = await Booking.find().populate('service');
