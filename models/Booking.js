@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
   service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
+  serviceTitle: String,
   customerId: String,
   customerName: String,       // ✅ Added
   customerEmail: String,      // ✅ Added
