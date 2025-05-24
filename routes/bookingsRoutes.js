@@ -133,6 +133,7 @@ router.get('/:id/generate-receipt', async (req, res) => {
     // Booking Details
     doc.text(`Service: ${booking.service.title}`);
     doc.text(`Hours: ${booking.hours}`);
+    doc.text(`Hours: ${booking.service.pricePerHour}`);
     doc.text(`Total Price: ${booking.totalPrice}`);
     doc.text(`Payment Code: ${booking.paymentCode}`);
     doc.text(`Date: ${booking.createdAt.toDateString()}`);
