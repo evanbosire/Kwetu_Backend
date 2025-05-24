@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Error fetching bookings', error: err.message });
   }
 });
-// Get all bookings where payment is not approved
+// Finance Get all pending bookings 
 router.get('/pending-payments', async (req, res) => {
   try {
     const bookings = await Booking.find({ paymentApproved: false }).populate('service');
@@ -64,7 +64,15 @@ router.get('/pending-payments', async (req, res) => {
     res.status(500).json({ message: 'Error fetching pending payment bookings', error: err.message });
   }
 });
-
+// Finance Get all approved bookings 
+router.get('/approved-payments', async (req, res) => {
+  try {
+    const bookings = await Booking.find({ paymentApproved: true }).populate('service');
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching pending payment bookings', error: err.message });
+  }
+});
 // Finance Manager approves payment
 router.patch('/:id/approve-payment', async (req, res) => {
   const booking = await Booking.findByIdAndUpdate(
