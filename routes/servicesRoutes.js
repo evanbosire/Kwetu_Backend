@@ -23,7 +23,7 @@ router.get('/paid-bookings', async (req, res) => {
   res.json(bookings);
 });
 
-// Service Manager allocates to supervisor by changing assignedSupervisor state to true
+// Service Manager allocates a supervisor a booking task which has been approved.
 router.patch('/allocate/:bookingId', async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(

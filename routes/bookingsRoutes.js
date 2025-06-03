@@ -133,8 +133,8 @@ router.get('/:id/generate-receipt', async (req, res) => {
     // Booking Details
     doc.text(`Service: ${booking.service.title}`);
     doc.text(`Hours: ${booking.hours}`);
-    doc.text(`Hours: ${booking.service.pricePerHour}`);
-    doc.text(`Total Price: ${booking.totalPrice}`);
+    doc.text(`Charge: ${booking.service.pricePerHour}`);
+    doc.text(`Total Charges: ${booking.totalPrice}`);
     doc.text(`Payment Code: ${booking.paymentCode}`);
     doc.text(`Date: ${booking.createdAt.toDateString()}`);
     doc.moveDown();
@@ -186,12 +186,44 @@ router.get('/supervisor/tasks', async (req, res) => {
 });
 
 
-// Supervisor assigns coach
+// // Supervisor assigns coach
+// router.patch('/:id/assign-coach', async (req, res) => {
+//   try {
+//     const booking = await Booking.findByIdAndUpdate(
+//       req.params.id,
+//       { assignedCoach: true },  
+//       { new: true }
+//     );
+    
+//     if (!booking) {
+//       return res.status(404).json({ message: 'Booking not found' });
+//     }
+
+//     res.json(booking);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// });
+
+// Updated Supervisor assigns coach endpoint
 router.patch('/:id/assign-coach', async (req, res) => {
   try {
+    const { coachId, coachName } = req.body; // Get coach details from request body
+    
+    // Validate required fields
+    if (!coachId || !coachName) {
+      return res.status(400).json({ 
+        message: 'Both coachId and coachName are required' 
+      });
+    }
+
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
-      { assignedCoach: true },  
+      { 
+        assignedCoach: true,
+        coachId: coachId,
+        coachName: coachName 
+      },
       { new: true }
     );
     
@@ -201,7 +233,10 @@ router.patch('/:id/assign-coach', async (req, res) => {
 
     res.json(booking);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 });
 // Gym Coach views all assigned tasks with assignedCoach set to true
