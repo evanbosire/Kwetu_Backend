@@ -22,12 +22,16 @@ const feedbackSchema = new mongoose.Schema(
       ref: "Customer",
       required: true,
     },
+    customerName: {  // Will be auto-populated
+      type: String,
+      required: true
+    },
     booking: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
       required: true,
     },
-    messages: [messageSchema], // all back and forth messages
+    messages: [messageSchema],
   },
   { timestamps: true }
 );

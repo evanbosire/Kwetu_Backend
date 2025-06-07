@@ -1,31 +1,38 @@
 const express = require("express");
 const Feedback = require("../models/Feedback");
+const Customer = require("../models/Customer");
 const router = express.Router();
 
 // 1️⃣ CUSTOMER sends initial feedback
-router.post("/", async (req, res) => {
+router.post("/post-feedback", async (req, res) => {
   try {
     const { customerId, bookingId, message } = req.body;
 
+    // 1. First find the customer to get their name
+    const customer = await Customer.findById(customerId).select('customerName');
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // 2. Create the feedback with auto-populated name
     const newFeedback = new Feedback({
       customer: customerId,
+      customerName: customer.customerName, // ✅ this field actually exists now
       booking: bookingId,
-      messages: [
-        {
-          sender: "customer",
-          message,
-        },
-      ],
+      messages: [{
+        sender: "customer",
+        message,
+      }],
     });
 
-    // Save the feedback first
     const savedFeedback = await newFeedback.save();
 
-    // Populate only the booking.customerName
     const populatedFeedback = await Feedback.findById(savedFeedback._id)
-      .populate("booking", "customerName");
+      .populate("booking", "serviceTitle customerName")
+      .populate("customer", "customerName email");
 
     res.status(201).json(populatedFeedback);
+    
   } catch (error) {
     console.error("Error creating feedback:", error);
     res.status(500).json({ message: "Failed to create feedback" });
@@ -91,6 +98,21 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch feedbacks" });
   }
 });
+router.get("/:id", async (req, res) => {
+  try {
+    const feedback = await Feedback.findById(req.params.id)
+      .populate("customer", "name email")
+      .populate("booking", "serviceTitle");
 
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    res.json(feedback);
+  } catch (error) {
+    console.error("Error fetching feedback:", error);
+    res.status(500).json({ message: "Failed to fetch feedback" });
+  }
+});
 
 module.exports = router;
