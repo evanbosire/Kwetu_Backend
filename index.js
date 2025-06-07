@@ -10,6 +10,9 @@ const employeeRoutes = require("./routes/employeeRoutes");
 const adminRoutes = require("./routes/adminRoutes"); // Admin routes for login and registration
 const serviceRoutes = require('./routes/servicesRoutes');
 const bookingRoutes = require('./routes/bookingsRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+
+
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
@@ -42,6 +45,8 @@ app.use("/api", employeeRoutes);
 app.use("/api/admin", adminRoutes); // Admin routes for login and registration
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
+// Add this with other app.use() routes
+app.use('/api/feedback', feedbackRoutes);
 
 app.use('/receipts', express.static(path.join(__dirname, 'public/receipts')));
 

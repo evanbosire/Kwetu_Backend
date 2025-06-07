@@ -184,28 +184,7 @@ router.get('/supervisor/tasks', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
-
-// // Supervisor assigns coach
-// router.patch('/:id/assign-coach', async (req, res) => {
-//   try {
-//     const booking = await Booking.findByIdAndUpdate(
-//       req.params.id,
-//       { assignedCoach: true },  
-//       { new: true }
-//     );
-    
-//     if (!booking) {
-//       return res.status(404).json({ message: 'Booking not found' });
-//     }
-
-//     res.json(booking);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error', error: error.message });
-//   }
-// });
-
-// Updated Supervisor assigns coach endpoint
+// Supervisor assigns coach endpoint
 router.patch('/:id/assign-coach', async (req, res) => {
   try {
     const { coachId, coachName } = req.body; // Get coach details from request body
@@ -256,8 +235,6 @@ router.get('/coach/tasks', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
-
 
 // Gym Coach marks as rendered
 router.patch('/:id/mark-rendered', async (req, res) => {
