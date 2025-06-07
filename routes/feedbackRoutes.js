@@ -78,22 +78,19 @@ router.post("/:id/customer-response", async (req, res) => {
   }
 });
 
-// 4️⃣ Get entire conversation (either role can fetch)
-router.get("/:id", async (req, res) => {
+// 📥 Get all feedbacks (for service manager to view and customer.)
+router.get("/", async (req, res) => {
   try {
-    const feedback = await Feedback.findById(req.params.id)
+    const feedbacks = await Feedback.find()
       .populate("customer", "name email")
-      .populate("booking", "serviceTitle date");
+      .populate("booking", "serviceTitle");
 
-    if (!feedback) {
-      return res.status(404).json({ message: "Feedback not found" });
-    }
-
-    res.json(feedback);
+    res.json(feedbacks);
   } catch (error) {
-    console.error("Error fetching feedback:", error);
-    res.status(500).json({ message: "Failed to fetch feedback" });
+    console.error("Error fetching all feedbacks:", error);
+    res.status(500).json({ message: "Failed to fetch feedbacks" });
   }
 });
+
 
 module.exports = router;
