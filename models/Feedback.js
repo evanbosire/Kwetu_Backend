@@ -1,39 +1,35 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const feedbackSchema = new mongoose.Schema({
-  booking: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Booking',
-    required: true
-  },
-  customer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Customer', // ✅ This must match the name used in your Customer model
-    required: true
+const messageSchema = new mongoose.Schema({
+  sender: {
+    type: String, // 'customer' or 'service_manager'
+    required: true,
   },
   message: {
     type: String,
-    required: true
+    required: true,
   },
-  messages: [  // ✅ New array for threaded replies
-    {
-      sender: {
-        type: String,
-        enum: ['customer', 'service_manager'],
-        required: true
-      },
-      message: {
-        type: String,
-        required: true
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now
-      }
-    }
-  ],
-}, { timestamps: true });
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const Feedback = mongoose.model('Feedback', feedbackSchema);
+const feedbackSchema = new mongoose.Schema(
+  {
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+      required: true,
+    },
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+    },
+    messages: [messageSchema], // all back and forth messages
+  },
+  { timestamps: true }
+);
 
-module.exports = Feedback;
+module.exports = mongoose.model("Feedback", feedbackSchema);
