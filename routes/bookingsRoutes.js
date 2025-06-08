@@ -274,7 +274,7 @@ router.patch('/:id/confirm-service', async (req, res) => {
   );
   res.json(booking);
 });
-// Service Manager views all tasks confirmed by them
+// Service Manager views all tasks confirmed by supervisor
 router.get('/supervisor/confirmed-tasks', async (req, res) => {
   try {
     const confirmedTasks = await Booking.find({ supervisorConfirmed: true })

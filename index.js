@@ -11,7 +11,9 @@ const adminRoutes = require("./routes/adminRoutes"); // Admin routes for login a
 const serviceRoutes = require('./routes/servicesRoutes');
 const bookingRoutes = require('./routes/bookingsRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
+// INVENTORY-> SUPPLIER -> FINANCE IMPORTS
 
+const requestRoutes = require("./routes/requestRoutes");
 
 
 const app = express();
@@ -50,6 +52,10 @@ app.use('/api/feedback', feedbackRoutes);
 
 app.use('/receipts', express.static(path.join(__dirname, 'public/receipts')));
 
+// INVENTORY-> SUPPLIER -> FINANCE ROUTES
+
+// Routes
+app.use('/api/inventory', requestRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
