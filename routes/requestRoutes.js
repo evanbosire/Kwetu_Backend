@@ -300,13 +300,12 @@ router.get("/accepted-items", async (req, res) => {
   }
 });
 
-// Finance Manager marks an accepted item as paid
 router.patch("/pay/:requestId/:itemId", async (req, res) => {
   const { requestId, itemId } = req.params;
   const { paymentCode } = req.body;
 
   try {
-    // Validate paymentCode format: 2 digits + 8 uppercase letters = 10 total
+    // Validate paymentCode format
     const isValidCode =
       /^[A-Z0-9]{10}$/.test(paymentCode) &&
       (paymentCode.match(/[0-9]/g) || []).length === 2 &&
@@ -315,61 +314,68 @@ router.patch("/pay/:requestId/:itemId", async (req, res) => {
     if (!isValidCode) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid payment code. It must contain 2 digits and 8 uppercase letters (total 10 characters).",
+        message: "Invalid payment code format (2 digits + 8 uppercase letters)",
       });
     }
 
     const request = await Request.findById(requestId);
     if (!request) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Request not found" });
+      return res.status(404).json({ 
+        success: false, 
+        message: "Request not found" 
+      });
     }
 
     const item = request.items.id(itemId);
     if (!item) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found in request" });
-    }
-
-    if (
-      item.inventoryStatus !== "accepted" ||
-      item.paymentStatus !== "unpaid"
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Item must be accepted and unpaid before payment.",
+      return res.status(404).json({ 
+        success: false, 
+        message: "Item not found in request" 
       });
     }
 
-    // Set payment status and attach payment code
+    if (item.inventoryStatus !== "accepted") {
+      return res.status(400).json({
+        success: false,
+        message: "Item must be accepted before payment",
+      });
+    }
+
+    if (item.paymentStatus === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Item has already been paid",
+      });
+    }
+
+    // Update payment status
     item.paymentStatus = "paid";
     item.paymentCode = paymentCode;
+    item.paymentDate = new Date(); // Add payment timestamp
 
     await request.save();
 
+    // Return more detailed success response
     res.status(200).json({
       success: true,
-      message: "Payment successful. Item marked as paid.",
-      paidAmount: item.totalPrice, // Auto-fetched amount paid
-      item: {
+      message: "Payment processed successfully",
+      data: {
+        requestId: request._id,
         itemId: item._id,
-        name: item.name,
-        quantity: item.quantity,
-        pricePerUnit: item.pricePerUnit,
-        totalPrice: item.totalPrice,
-        unit: item.unit,
         paymentStatus: item.paymentStatus,
         paymentCode: item.paymentCode,
-        inventoryStatus: item.inventoryStatus,
-        status: item.status,
-      },
+        paymentDate: item.paymentDate,
+        amount: item.totalPrice
+      }
     });
+
   } catch (err) {
     console.error("Payment processing error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: err.message 
+    });
   }
 });
 //  Supplier downloads the receipt
