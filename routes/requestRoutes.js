@@ -445,51 +445,50 @@ router.get('/stored-items', async (req, res) => {
     });
   }
 });
-//  Supplier downloads the receipt
+// Supplier downloads the receipt
 router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
   const { requestId, itemId } = req.params;
-
+  
   try {
     const request = await Request.findById(requestId);
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
-
+    
     const item = request.items.id(itemId);
-    if (
-      !item ||
-      item.paymentStatus !== "paid" ||
-      !item.paymentCode ||
-      !item.paidAmount
-    ) {
+    if (!item) {
+      return res.status(400).json({ message: "Item not found" });
+    }
+    
+    // Only check if payment status is paid
+    if (item.paymentStatus !== "paid") {
       return res.status(400).json({
-        message:
-          "Receipt cannot be generated. Payment is either incomplete or missing details.",
+        message: "Receipt cannot be generated. Item payment status is not 'paid'.",
       });
     }
-
+    
     // Directory for receipts
     const receiptsDir = path.join(__dirname, "../public/receipts");
     if (!fs.existsSync(receiptsDir)) {
       fs.mkdirSync(receiptsDir, { recursive: true });
     }
-
+    
     const receiptPath = path.join(receiptsDir, `${requestId}_${itemId}.pdf`);
     const writeStream = fs.createWriteStream(receiptPath);
-
+    
     const doc = new PDFDocument({ size: "A4", margin: 50 });
     doc.pipe(writeStream);
-
+    
     // Background
     doc.rect(0, 0, doc.page.width, doc.page.height).fill("#f2f2f2");
     doc.fillColor("black");
-
+    
     // Header
     doc.fontSize(22).text("Corrugated Sheets Limited", { align: "center" });
     doc.moveDown();
     doc.fontSize(18).text("Supplier Payment Receipt", { align: "center" });
     doc.moveDown();
-
+    
     // Request Info
     doc
       .fontSize(12)
@@ -498,15 +497,15 @@ router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
     doc.text(`Request ID: ${request._id}`);
     doc.text(`Item ID: ${item._id}`);
     doc.moveDown();
-
+    
     // Item Details
     doc.text(`Item Name: ${item.name}`);
     doc.text(`Quantity: ${item.quantity}`);
     doc.text(`Unit: ${item.unit}`);
-    doc.text(`Unit Price: ${item.pricePerUnit}`);
-    doc.text(`Total Price: ${item.totalPrice}`);
-    doc.text(`Paid Amount: ${item.paidAmount}`);
-    doc.text(`Payment Code: ${item.paymentCode}`);
+    doc.text(`Unit Price: ${item.pricePerUnit || "N/A"}`);
+    doc.text(`Total Price: ${item.totalPrice || "N/A"}`);
+    doc.text(`Paid Amount: ${item.paidAmount || item.totalPrice || "N/A"}`);
+    doc.text(`Payment Code: ${item.paymentCode || "N/A"}`);
     doc.text(
       `Payment Date: ${
         item.paymentDate ? new Date(item.paymentDate).toDateString() : "N/A"
@@ -514,7 +513,7 @@ router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
     );
     doc.text(`Generated On: ${new Date().toDateString()}`);
     doc.moveDown();
-
+    
     // Footer
     doc
       .fontSize(10)
@@ -525,25 +524,26 @@ router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
       "We value your partnership and look forward to more business together."
     );
     doc.moveDown();
-
+    
     doc.end();
-
+    
     writeStream.on("finish", async () => {
       const receiptUrl = `/receipts/${requestId}_${itemId}.pdf`;
-
+      
       item.receiptUrl = receiptUrl;
       await request.save();
-
+      
       res.status(200).json({
         message: "Receipt generated successfully",
         receiptUrl,
       });
     });
-
+    
     writeStream.on("error", (err) => {
       console.error("Write stream error:", err);
       res.status(500).json({ message: "Error saving receipt file" });
     });
+    
   } catch (err) {
     console.error("Error generating receipt:", err);
     res.status(500).json({ message: "Server error" });
