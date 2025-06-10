@@ -378,6 +378,73 @@ router.patch("/pay/:requestId/:itemId", async (req, res) => {
     });
   }
 });
+
+// supplier gets all supplied equipments with the status of stored
+router.get('/stored-items', async (req, res) => {
+  try {
+    // Find all requests containing items with status 'stored'
+    const requests = await Request.find({ 'items.status': 'stored' })
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    // Extract and format all stored items
+    const storedItems = requests.flatMap(request => 
+      request.items
+        .filter(item => item.status === 'stored')
+        .map(item => ({
+          // Request information
+          requestId: request._id,
+          requestDate: request.createdAt,
+          requestedBy: request.requestedBy,
+          supplier: {
+            id: request.supplier?._id,
+            name: request.supplier?.name || request.supplierName,
+            contact: request.supplier?.contact,
+            email: request.supplier?.email
+          },
+
+          // Item details
+          itemId: item._id,
+          name: item.name,
+          description: item.description,
+          category: item.category,
+          quantity: item.quantity,
+          unit: item.unit,
+          pricePerUnit: item.pricePerUnit,
+          totalPrice: item.totalPrice,
+          
+          // Status information
+          status: item.status,
+          inventoryStatus: item.inventoryStatus,
+          paymentStatus: item.paymentStatus || 'unpaid',
+          
+          // Dates
+          suppliedDate: item.suppliedDate,
+          acceptedDate: item.acceptedDate,
+          storedDate: item.storedDate || item.updatedAt, // Fallback to updatedAt
+          
+          // Additional metadata
+          notes: item.notes,
+          storageLocation: item.storageLocation,
+          barcode: item.barcode,
+          serialNumber: item.serialNumber
+        }))
+    );
+
+    res.status(200).json({
+      success: true,
+      count: storedItems.length,
+      storedItems
+    });
+
+  } catch (error) {
+    console.error('Error fetching stored items:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching stored items',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 //  Supplier downloads the receipt
 router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
   const { requestId, itemId } = req.params;
