@@ -19,6 +19,9 @@ const requestRoutes = require("./routes/requestRoutes");
 // GYM COACH-> INVENTORY IMPORTS
 
 const gymcoachRoutes = require('./routes/gymcoachRoutes');
+const bookingReports = require('./routes/bookingReportsRoutes')
+const paymentReports = require('./routes/paymentReportRoutes')
+const inventoryReports = require('./routes/inventoryReportsRoutes')
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
@@ -65,6 +68,9 @@ app.use('/api/inventory', requestRoutes);
 // GYM COACH-> INVENTORY
 
 app.use('/api/gymcoach', gymcoachRoutes)
+app.use('/api/customer', bookingReports)
+app.use('/api/customer', paymentReports)
+app.use('/api/customer', inventoryReports)
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
