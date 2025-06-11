@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const InventoryItem = require("../models/InventoryStore");
 const EquipmentRequest = require("../models/EquipmentRequest");
+const Employee = require("../models/Employee");
 
 
 
@@ -22,7 +23,7 @@ router.post('/equipment-requests', async (req, res) => {
   try {
     const { itemId, requestedQuantity } = req.body;
 
-    // Validate minimum quantity
+    // Validate quantity
     if (requestedQuantity < 1) {
       return res.status(400).json({ 
         success: false, 
@@ -30,14 +31,12 @@ router.post('/equipment-requests', async (req, res) => {
       });
     }
 
+    // Find inventory item
     const item = await InventoryItem.findById(itemId);
-    
-    // Check item exists
     if (!item) {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
 
-    // Check stock availability
     if (item.quantity < requestedQuantity) {
       return res.status(400).json({ 
         success: false, 
@@ -46,82 +45,25 @@ router.post('/equipment-requests', async (req, res) => {
       });
     }
 
-    // Create request
+    // 🧠 Find the Gym Coach (you can modify logic if there are multiple)
+    const coach = await Employee.findOne({ role: 'Gym Coach', status: 'active' });
+
+    if (!coach) {
+      return res.status(404).json({ success: false, message: 'No active Gym Coach found' });
+    }
+
+    // Create request with coachId from DB
     const request = await EquipmentRequest.create({ 
       itemId, 
-      requestedQuantity
+      requestedQuantity,
+      coachId: coach._id
     });
 
     res.status(201).json({ success: true, request });
+
   } catch (error) {
+    console.error("Equipment Request Error:", error);
     res.status(500).json({ success: false, message: 'Error creating request' });
-  }
-});
-
-
-// Inventory Manager: Views all equipment requests from the coach
-router.get('/equipment-requests', async (req, res) => {
-  try {
-    const requests = await EquipmentRequest.find({})
-      .populate('itemId', 'name unit quantity')
-      .sort({ updatedAt: -1 });
-
-    res.status(200).json({ success: true, requests });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching requests' });
-  }
-});
-
-// Inventory Manager: Approves and releases equipment
-router.patch('/equipment-requests/:requestId/release', async (req, res) => {
-  try {
-    const { releaseQuantity } = req.body;
-    const request = await EquipmentRequest.findById(req.params.requestId)
-      .populate('itemId');
-    
-    // Validate request exists
-    if (!request) {
-      return res.status(404).json({ success: false, message: 'Request not found' });
-    }
-
-    // Validate minimum release
-    if (releaseQuantity < 1) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'You must release at least 1 item' 
-      });
-    }
-
-    // Calculate maximum available
-    const maxAvailable = Math.min(
-      request.itemId.quantity,
-      request.requestedQuantity - request.releasedQuantity
-    );
-
-    // Validate sufficient stock
-    if (releaseQuantity > maxAvailable) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Cannot release ${releaseQuantity} items. Maximum requested to release is: ${maxAvailable}`,
-        maxAvailable
-      });
-    }
-
-    // Update inventory
-    request.itemId.quantity -= releaseQuantity;
-    await request.itemId.save();
-
-    // Update request status
-    request.releasedQuantity += releaseQuantity;
-    request.status = request.releasedQuantity === request.requestedQuantity 
-      ? 'approved' 
-      : 'partially-approved';
-    request.updatedAt = new Date();
-    await request.save();
-
-    res.status(200).json({ success: true, request });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error releasing items' });
   }
 });
 
@@ -241,6 +183,73 @@ router.patch('/equipment-requests/:requestId/return', async (req, res) => {
   }
 });
 
+
+
+// Inventory Manager: Views all equipment requests from the coach
+router.get('/equipment-requests', async (req, res) => {
+  try {
+    const requests = await EquipmentRequest.find({})
+      .populate('itemId', 'name unit quantity')
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({ success: true, requests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching requests' });
+  }
+});
+
+// Inventory Manager: Approves and releases equipment
+router.patch('/equipment-requests/:requestId/release', async (req, res) => {
+  try {
+    const { releaseQuantity } = req.body;
+    const request = await EquipmentRequest.findById(req.params.requestId)
+      .populate('itemId');
+    
+    // Validate request exists
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Request not found' });
+    }
+
+    // Validate minimum release
+    if (releaseQuantity < 1) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You must release at least 1 item' 
+      });
+    }
+
+    // Calculate maximum available
+    const maxAvailable = Math.min(
+      request.itemId.quantity,
+      request.requestedQuantity - request.releasedQuantity
+    );
+
+    // Validate sufficient stock
+    if (releaseQuantity > maxAvailable) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot release ${releaseQuantity} items. Maximum requested to release is: ${maxAvailable}`,
+        maxAvailable
+      });
+    }
+
+    // Update inventory
+    request.itemId.quantity -= releaseQuantity;
+    await request.itemId.save();
+
+    // Update request status
+    request.releasedQuantity += releaseQuantity;
+    request.status = request.releasedQuantity === request.requestedQuantity 
+      ? 'approved' 
+      : 'partially-approved';
+    request.updatedAt = new Date();
+    await request.save();
+
+    res.status(200).json({ success: true, request });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error releasing items' });
+  }
+});
 
 
 
