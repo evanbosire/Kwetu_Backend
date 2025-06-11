@@ -484,7 +484,7 @@ router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
     doc.fillColor("black");
     
     // Header
-    doc.fontSize(22).text("Corrugated Sheets Limited", { align: "center" });
+    doc.fontSize(22).text("Kwetu Nutrition", { align: "center" });
     doc.moveDown();
     doc.fontSize(18).text("Supplier Payment Receipt", { align: "center" });
     doc.moveDown();
