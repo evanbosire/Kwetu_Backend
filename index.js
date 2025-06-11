@@ -16,6 +16,9 @@ const feedbackRoutes = require('./routes/feedbackRoutes');
 
 const requestRoutes = require("./routes/requestRoutes");
 
+// GYM COACH-> INVENTORY IMPORTS
+
+const gymcoachRoutes = require('./routes/gymcoachRoutes');
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
@@ -57,6 +60,11 @@ app.use('/receipts', express.static(path.join(__dirname, 'public/receipts')));
 
 // Routes
 app.use('/api/inventory', requestRoutes);
+
+
+// GYM COACH-> INVENTORY
+
+app.use('/api/gymcoach', gymcoachRoutes)
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

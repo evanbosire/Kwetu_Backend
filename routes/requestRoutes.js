@@ -506,11 +506,7 @@ router.get("/:requestId/:itemId/generate-receipt", async (req, res) => {
     doc.text(`Total Price: ${item.totalPrice || "N/A"}`);
     doc.text(`Paid Amount: ${item.paidAmount || item.totalPrice || "N/A"}`);
     doc.text(`Payment Code: ${item.paymentCode || "N/A"}`);
-    doc.text(
-      `Payment Date: ${
-        item.paymentDate ? new Date(item.paymentDate).toDateString() : "N/A"
-      }`
-    );
+    
     doc.text(`Generated On: ${new Date().toDateString()}`);
     doc.moveDown();
     
